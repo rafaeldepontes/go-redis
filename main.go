@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -13,8 +14,14 @@ func main() {
 
 	l, err := net.Listen("tcp", ":6379")
 	if err != nil {
-		log.Fatalln("[ERROR] Cannot acess port 6379:", err)
+		log.Fatalln("[ERROR] Cannot acess port '6379':", err)
 	}
+
+	aof, err := NewAof("database.aof")
+	if err != nil {
+		log.Fatalln("[ERROR] Could not read or create AOF:", err)
+	}
+	defer aof.Close()
 
 	conn, err := l.Accept()
 	if err != nil {
@@ -53,6 +60,13 @@ func main() {
 			log.Println("[WARN] Invalid command: ", command)
 			_ = writer.Write(Value{typ: "string", str: ""})
 			continue
+		}
+
+		if command == "SET" || command == "HSET" {
+			if err := aof.Write(value); err != nil {
+				fmt.Println("[ERROR] Could not write the content into AOF:", err)
+				continue
+			}
 		}
 
 		result := handler(args)

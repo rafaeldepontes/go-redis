@@ -106,10 +106,10 @@ func (r *Resp) readBulk() (Value, error) {
 
 	bulk := make([]byte, length)
 
-	r.reader.Read(bulk)
+	_, _ = r.reader.Read(bulk)
 	v.bulk = string(bulk)
 
-	r.readLine()
+	_, _, _ = r.readLine()
 
 	return v, nil
 }
@@ -126,7 +126,7 @@ func (r *Resp) Read() (Value, error) {
 	case BULK:
 		return r.readBulk()
 	default:
-		log.Println("[WARN] Unknown type: %v", string(_type))
+		log.Printf("[WARN] Unknown type: %v\n", string(_type))
 		return Value{}, nil
 	}
 }
